@@ -13,7 +13,7 @@ class LevenshteinIndex:
         self._levenshtein_distance = levenshtein_distance
         
     def indexing(self, word_counter):
-        self._words = word_counter if type(word_counter) == dict else {w:1 for w in word_counter if w}        
+        self._words = word_counter if type(word_counter) == dict else {w:1 for w in word_counter if w}
         self._index = defaultdict(lambda: set())
         for word in word_counter:
             for c in word:
