@@ -1,5 +1,5 @@
 __title__ = '빠른 한글 수정 거리 검색을 위한 inverted index '
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Lovit'
 __license__ = 'GPL v3'
 __copyright__ = 'Copyright 2017 Lovit'
