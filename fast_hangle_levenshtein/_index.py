@@ -41,7 +41,7 @@ class LevenshteinIndex:
         self._jong_index = dict(self._jong_index)
     
     def levenshtein_search(self, word, max_distance=1):
-        process_time = time()
+        search_time = time()
         candidates = defaultdict(int)
         (n, nc) = (len(word), len(set(word)))
         for c in set(word):
@@ -60,13 +60,13 @@ class LevenshteinIndex:
             dist[c] = levenshtein(c, word)
         
         if self.verbose:
-            process_time = time() - process_time
-            print(', time={:.3} sec.'.format(process_time))
+            search_time = time() - search_time
+            print(', time={:.3} sec.'.format(search_time))
         
         return sorted(filter(lambda x:x[1] <= max_distance, dist.items()), key=lambda x:x[1])
     
     def jamo_levenshtein_search(self, word, max_distance=1):
-        process_time = time()
+        search_time = time()
         candidates = defaultdict(lambda: 0)
         (n, nc) = (len(word), len(set(word)))
         for c in set(word):
@@ -94,7 +94,7 @@ class LevenshteinIndex:
             dist[c] = jamo_levenshtein(c, word)
         
         if self.verbose:
-            process_time = time() - process_time
-            print(', time={:.3} sec.'.format(process_time))
+            search_time = time() - search_time
+            print(', time={:.3} sec.'.format(search_time))
         
         return sorted(filter(lambda x:x[1] <= max_distance, dist.items()), key=lambda x:x[1])
