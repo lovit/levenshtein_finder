@@ -1,4 +1,5 @@
 from ._hangle import decompose
+from ._hangle import character_is_korean
 
 def levenshtein(s1, s2, cost=None):
     # based on Wikipedia/Levenshtein_distance#Python
@@ -34,7 +35,13 @@ def jamo_levenshtein(s1, s2):
         return len(s1)
     
     def get_jamo_cost(c1, c2):
-        return 0 if (c1 == c2) else levenshtein(decompose(c1), decompose(c2))/3
+        c1_is_korean, c2_is_korean = character_is_korean(c1), character_is_korean(c2)
+        if c1_is_korean and c2_is_korean:
+            return 0 if (c1 == c2) else levenshtein(decompose(c1), decompose(c2))/3
+        elif not (c1_is_korean) and not (c2_is_korean):
+            return 0 if (c1 == c2) else 1
+        else:
+            return 1
 
     previous_row = range(len(s2) + 1)
     for i, c1 in enumerate(s1):
