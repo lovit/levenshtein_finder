@@ -11,8 +11,8 @@
 
 1. Levenshtein distance
 
-        indexer.levenshtein_search('아이코')
+        indexer.levenshtein_search('아이코', max_distance=1)
     
 1. Jamo Levenshtein distance
 
-    Not implemented yet. 
+        indexer.jamo_levenshtein_search('아이코', max_distance=4/3)
