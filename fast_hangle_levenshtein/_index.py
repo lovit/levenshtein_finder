@@ -13,7 +13,7 @@ class LevenshteinIndex:
         if words:
             self.indexing(words)
         self.verbose = verbose
-        self.jamo_distance_factor = 3
+        self.jamo_base_distance = 1/3
 
     def indexing(self, words):
         self._words = words if type(words) == dict else {w:0 for w in words if w}
@@ -77,11 +77,11 @@ class LevenshteinIndex:
                 continue
             cho, jung, jong = decompose(c)
             for item in self._cho_index.get(cho, {}):
-                similars[item] += self.jamo_score
+                similars[item] += self.jamo_base_distance
             for item in self._jung_index.get(jung, {}):
-                similars[item] += self.jamo_score
+                similars[item] += self.jamo_base_distance
             for item in self._jong_index.get(jong, {}):
-                similars[item] += self.jamo_score
+                similars[item] += self.jamo_base_distance
 
         if self.verbose:
             print('query={}, candidates={} '.format(query, len(similars)), end='')
