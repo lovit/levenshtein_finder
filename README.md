@@ -16,3 +16,36 @@
 1. Jamo Levenshtein distance
 
         indexer.jamo_levenshtein_search('아이코', max_distance=4/3)
+
+### Performance
+
+With 132,864 nouns,
+
+    print(len(nouns)) # 132,864
+
+    from fast_hangle_levenshtein import LevenshteinIndex
+
+    financial_word_indexer = LevenshteinIndex(nouns)
+    financial_word_indexer.verbose = True
+    financial_word_indexer.levenshtein_search('분식회계')
+
+    $ query=분식회계, candidates=10137 -> 7, time=0.00606 sec.
+    $ [('분식회계', 0), ('분식회', 1), ('분식회계설', 1), ('분석회계', 1)]
+
+Using Levenshtein distance for all 132,864 reference words,
+
+    import time
+    from fast_hangle_levenshtein import levenshtein
+    from fast_hangle_levenshtein import jamo_levenshtein
+
+    query = '분식회계'
+
+    search_time = time.time()
+    distance = {word:levenshtein(word, query) for word in noun_scores}
+    search_time = time.time() - search_time
+    print('search time = {} sec'.format('%.2f'%search_time)) # search time = 2.27 sec
+
+With same results.
+
+    similars = sorted(filter(lambda x:x[1] <= 1, distance.items()), key=lambda x:x[1])
+    print(similars) # [('분식회계', 0), ('분식회', 1), ('분식회계설', 1), ('분석회계', 1)]
