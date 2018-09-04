@@ -13,15 +13,15 @@ class LevenshteinIndex:
         if words:
             self.indexing(words)
         self.verbose = verbose
-        self.jamo_score = 1/3
-        
+        self.jamo_distance_factor = 3
+
     def indexing(self, words):
         self._words = words if type(words) == dict else {w:0 for w in words if w}
         self._index = defaultdict(lambda: set())
         self._cho_index = defaultdict(lambda: set())
         self._jung_index = defaultdict(lambda: set())
         self._jong_index = defaultdict(lambda: set())
-        
+
         for word in words:
             # Indexing for levenshtein
             for c in word:
@@ -34,12 +34,12 @@ class LevenshteinIndex:
                 self._cho_index[cho].add(word)
                 self._jung_index[jung].add(word)
                 self._jong_index[jong].add(word)
-                
+
         self._index = dict(self._index)
         self._cho_index = dict(self._cho_index)
         self._jung_index = dict(self._jung_index)
         self._jong_index = dict(self._jong_index)
-    
+
     def levenshtein_search(self, query, max_distance=1):
         search_time = time()
         similars = defaultdict(int)
@@ -47,25 +47,25 @@ class LevenshteinIndex:
         for c in set(query):
             for item in self._index.get(c, {}):
                 similars[item] += 1
-                
+
         if self.verbose:
             print('query={}, candidates={} '.format(query, len(similars)), end='')
-            
+
         similars = {word for word,f in similars.items()
                     if (abs(n-len(word)) <= max_distance) and (abs(nc - f) <= max_distance)}
         if self.verbose:
             print('-> {}'.format(len(similars)), end='')
-        
+
         dist = {}
         for word in similars:
             dist[word] = levenshtein(word, query)
-        
+
         if self.verbose:
             search_time = time() - search_time
             print(', time={:.3} sec.'.format(search_time))
-        
+
         return sorted(filter(lambda x:x[1] <= max_distance, dist.items()), key=lambda x:x[1])
-    
+
     def jamo_levenshtein_search(self, query, max_distance=1):
         search_time = time()
         similars = defaultdict(lambda: 0)
@@ -82,21 +82,21 @@ class LevenshteinIndex:
                 similars[item] += self.jamo_score
             for item in self._jong_index.get(jong, {}):
                 similars[item] += self.jamo_score
-                
+
         if self.verbose:
             print('query={}, candidates={} '.format(query, len(similars)), end='')
-            
+
         similars = {word for word,f in similars.items()
                     if (abs(n-len(word)) <= max_distance) and (abs(nc - f) <= max_distance)}
         if self.verbose:
             print('-> {}'.format(len(similars)), end='')
-        
+
         dist = {}
         for word in similars:
             dist[word] = jamo_levenshtein(word, query)
-        
+
         if self.verbose:
             search_time = time() - search_time
             print(', time={:.3} sec.'.format(search_time))
-        
+
         return sorted(filter(lambda x:x[1] <= max_distance, dist.items()), key=lambda x:x[1])
