@@ -1,4 +1,5 @@
 from typing import List, Union
+from .normalizer import Normalizers
 
 
 class Tokenizer:
@@ -76,7 +77,7 @@ class HuggingfaceTokenizersWrapper(Tokenizer):
 
 
 class CharacterTokenizer(Tokenizer):
-    def __init__(self, vocab=None):
+    def __init__(self, vocab=None, normalizer=None):
         if vocab is None:
             vocab = []
         self.vocab = vocab
@@ -85,13 +86,18 @@ class CharacterTokenizer(Tokenizer):
             self.unk_ids = len(vocab) + 1
         else:
             self.unk_ids = 0
+        if normalizer is None:
+            normalizer = Normalizers.create_normalizer()
+        if not callable(normalizer):
+            raise ValueError("Normalizer must be `callable` or None")
+        self.normalizer = normalizer
 
     @property
     def is_trained(self):
         return len(self.vocab) > 0
 
     def train(self, strings: List[str]):
-        charset = {char for string in strings for char in string}
+        charset = {char for string in strings for char in self.normalizer(string)}
         vocab = sorted(charset)
         vocab_to_idx = {v: idx for idx, v in enumerate(vocab)}
         self.vocab = vocab
@@ -99,7 +105,7 @@ class CharacterTokenizer(Tokenizer):
         self.unk_ids = len(vocab) + 1
 
     def tokenize(self, string):
-        return list(string)
+        return list(self.normalizer(string))
 
     def encode(self, string):
         return self.convert_tokens_to_ids(self.tokenize(string))
