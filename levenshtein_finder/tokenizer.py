@@ -1,4 +1,5 @@
 from typing import List, Union
+from unicodedata import normalize
 from .normalizer import Normalizers
 
 
@@ -19,6 +20,9 @@ class Tokenizer:
     def tokenize(self, string: str) -> List[str]:
         raise NotImplementedError("Implement Tokenizer.tokenize")
 
+    def detokenize(self, tokens: List[str]) -> str:
+        raise NotImplementedError("Implement Tokenizer.detokenize")
+
     def encode(self, string: str) -> List[int]:
         raise NotImplementedError("Implement Tokenizer.encode")
 
@@ -26,13 +30,18 @@ class Tokenizer:
         raise NotImplementedError("Implement Tokenizer.convert_tokens_to_ids")
 
 
-class HuggingfaceTokenizersWrapper(Tokenizer):
+class WordpieceTokenizersWrapper(Tokenizer):
+    """
+    Args:
+        tokenizer (tokenizers.BertWordPieceTokenizer)
+    """
+
     def __init__(self, tokenizer):
         super().__init__()
         self.tokenizer = tokenizer
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool:
         return self.tokenizer.get_vocab_size() > 0
 
     def train(
@@ -66,13 +75,24 @@ class HuggingfaceTokenizersWrapper(Tokenizer):
     def save_model(self, directory: str, prefix: str = None):
         self.tokenizer.save_model(directory=directory, prefix=prefix)
 
-    def tokenize(self, string):
+    def tokenize(self, string: str) -> List[str]:
         return self.tokenizer.encode(string).tokens
 
-    def encode(self, string):
+    def detokenize(self, tokens: List[str]) -> str:
+        prefix = self.tokenizer._parameters["wordpieces_prefix"]
+        n = len(prefix)
+        detok = []
+        for token in tokens:
+            if token[:n] == prefix:
+                detok.append(token[n:])
+            else:
+                detok.append(f" {token}")
+        return normalize("NFKC", "".join(detok).strip())
+
+    def encode(self, string: str) -> List[int]:
         return self.tokenizer.encode(string).ids
 
-    def convert_tokens_to_ids(self, tokens):
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]:
         return [self.tokenizer.token_to_id(token) for token in tokens]
 
 
@@ -93,7 +113,7 @@ class CharacterTokenizer(Tokenizer):
         self.normalizer = normalizer
 
     @property
-    def is_trained(self):
+    def is_trained(self) -> bool:
         return len(self.vocab) > 0
 
     def train(self, strings: List[str]):
@@ -104,11 +124,14 @@ class CharacterTokenizer(Tokenizer):
         self.vocab_to_idx = vocab_to_idx
         self.unk_ids = len(vocab) + 1
 
-    def tokenize(self, string):
+    def tokenize(self, string: str) -> List[str]:
         return list(self.normalizer(string))
 
-    def encode(self, string):
+    def detokenize(self, tokens: List[str]) -> str:
+        return self.normalizer.denormalize("".join(tokens))
+
+    def encode(self, string: str) -> List[int]:
         return self.convert_tokens_to_ids(self.tokenize(string))
 
-    def convert_tokens_to_ids(self, tokens):
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]:
         return [self.vocab_to_idx.get(token, self.unk_ids) for token in tokens]
