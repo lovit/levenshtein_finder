@@ -5,7 +5,11 @@ from .normalizer import Normalizers
 
 class Tokenizer:
     def __init__(self):
+        self.vocab_size = 0
         pass
+
+    def __len__(self):
+        return self.vocab_size
 
     @property
     def is_trained(self):
@@ -71,6 +75,7 @@ class WordpieceTokenizersWrapper(Tokenizer):
             show_progress=show_progress,
             wordpieces_prefix=wordpieces_prefix,
         )
+        self.vocab_size = self.tokenizer.get_vocab_size() + 1
 
     def save_model(self, directory: str, prefix: str = None):
         self.tokenizer.save_model(directory=directory, prefix=prefix)
@@ -123,6 +128,7 @@ class CharacterTokenizer(Tokenizer):
         self.vocab = vocab
         self.vocab_to_idx = vocab_to_idx
         self.unk_ids = len(vocab) + 1
+        self.vocab_size = len(vocab) + 1
 
     def tokenize(self, string: str) -> List[str]:
         return list(self.normalizer(string))
