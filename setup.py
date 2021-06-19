@@ -27,6 +27,7 @@ setup(
     version=about["__version__"],
     author=about["__author__"],
     description=about["__description__"],
+    url='https://github.com/lovit/levenshtein_finder',
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements(),
