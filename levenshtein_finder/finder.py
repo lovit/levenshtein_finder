@@ -47,21 +47,12 @@ class LevenshteinFinder:
             for idx in token_ids_in_string:
                 inverted_index[idx].append(string_idx)
         inverted_index = [
-            array("I", string_indices) for string_indices in inverted_index
+            array("I", set(string_indices)) for string_indices in inverted_index
         ]
         self.inverted_index = inverted_index
         self.token_ids = [
             array("I", token_ids_in_string) for token_ids_in_string in token_ids
         ]
-        self.unique_token_ids = [
-            array("I", set(token_ids_in_string)) for token_ids_in_string in token_ids
-        ]
-
-        # create unique token index
-        self.unique_tokens = [
-            len(set(token_ids_in_string)) for token_ids_in_string in token_ids
-        ]
-
         self.data = strings
 
     def search(self, query, max_distance=1, pretokenized=False, verbose=False):
@@ -79,6 +70,7 @@ class LevenshteinFinder:
         for unique_token_id in set(token_ids):
             for string_idx in self.inverted_index[unique_token_id]:
                 candidates[string_idx] += 1
+        n_token_matched = len(candidates)
 
         # filtering using num unique token & length
         n = len(token_ids)
@@ -92,21 +84,12 @@ class LevenshteinFinder:
                 and (abs(count - unique_n) <= max_distance)
             )
         }
-
-        # filter-out using unique-token-matching
-        filtered_candidates = []
-        for string_idx in candidates:
-            n_match = 0
-            for token_id in self.unique_token_ids[string_idx]:
-                if token_id in unique_token_ids:
-                    n_match += 1
-            if abs(n_match - unique_n) <= max_distance:
-                filtered_candidates.append(string_idx)
+        n_filtered = len(candidates)
 
         # calculate levenshtein distance
         distances = {
             self.data[string_idx]: levenshtein(self.token_ids[string_idx], token_ids)
-            for string_idx in filtered_candidates
+            for string_idx in candidates
         }
         t = time.time() - t
 
@@ -114,8 +97,8 @@ class LevenshteinFinder:
             print(f"query               : {query}")
             print(f"tokens              : {tokens}")
             print(f"num data            : {len(self.data)}")
-            print(f"num 1st candidates  : {len(candidates)}")
-            print(f"num final candidates: {len(filtered_candidates)}")
+            print(f"num 1st candidates  : {n_token_matched}")
+            print(f"num final candidates: {n_filtered}")
             print(f"elapsed time        : {t:.6} sec")
 
         return distances
