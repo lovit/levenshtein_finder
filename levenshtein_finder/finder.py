@@ -87,10 +87,16 @@ class LevenshteinFinder:
         n_filtered = len(candidates)
 
         # calculate levenshtein distance
-        distances = {
-            self.data[string_idx]: levenshtein(self.token_ids[string_idx], token_ids)
+        distances = [
+            levenshtein(self.token_ids[string_idx], token_ids)
             for string_idx in candidates
-        }
+        ]
+        similars = [
+            {"idx": string_idx, "data": self.data[string_idx], "distance": distance}
+            for string_idx, distance in zip(candidates, distances)
+            if distance <= max_distance
+        ]
+        similars = sorted(similars, key=lambda x: (x["distance"], x["idx"]))
         t = time.time() - t
 
         if verbose:
@@ -99,6 +105,7 @@ class LevenshteinFinder:
             print(f"num data            : {len(self.data)}")
             print(f"num 1st candidates  : {n_token_matched}")
             print(f"num final candidates: {n_filtered}")
+            print(f"num similars        : {len(similars)}")
             print(f"elapsed time        : {t:.6} sec")
 
-        return distances
+        return similars
