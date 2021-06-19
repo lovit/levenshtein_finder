@@ -87,8 +87,10 @@ class LevenshteinFinder:
         candidates = {
             string_idx: count
             for string_idx, count in candidates.items()
-            if (len_min <= self.lengths[string_idx] <= len_max)
-            and (abs(count - unique_n) <= max_distance)
+            if (
+                (len_min <= self.lengths[string_idx] <= len_max)
+                and (abs(count - unique_n) <= max_distance)
+            )
         }
 
         # filter-out using unique-token-matching
