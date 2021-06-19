@@ -67,7 +67,9 @@ class WordpieceTokenizersWrapper(Tokenizer):
         wordpieces_prefix: str = "##",
     ):
         if not isinstance(files, str) or not os.path.isfile(files):
-            raise ValueError("`WordpieceTokenizersWrapper.train` input argument must be file path")
+            raise ValueError(
+                "`WordpieceTokenizersWrapper.train` input argument must be file path"
+            )
         self.tokenizer.train(
             files=files,
             vocab_size=vocab_size,
@@ -141,6 +143,57 @@ class CharacterTokenizer(Tokenizer):
 
     def detokenize(self, tokens: List[str]) -> str:
         return self.normalizer.denormalize("".join(tokens))
+
+    def encode(self, string: str) -> List[int]:
+        return self.convert_tokens_to_ids(self.tokenize(string))
+
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]:
+        return [self.vocab_to_idx.get(token, self.unk_ids) for token in tokens]
+
+
+class BigramTokenizer(Tokenizer):
+    def __init__(self, vocab=None, normalizer=None):
+        if vocab is None:
+            vocab = []
+        self.vocab = vocab
+        self.vocab_to_idx = {v: idx for idx, v in enumerate(vocab)}
+        if vocab:
+            self.unk_ids = len(vocab) + 1
+        else:
+            self.unk_ids = 0
+        if normalizer is None:
+            normalizer = Normalizers.create_normalizer()
+        if not callable(normalizer):
+            raise ValueError("Normalizer must be `callable` or None")
+        self.normalizer = normalizer
+
+    @property
+    def is_trained(self) -> bool:
+        return len(self.vocab) > 0
+
+    def _to_bigram(self, string):
+        n = max(len(string), 2)
+        return [string[i : i + 2] for i in range(n - 1)]
+
+    def train(self, strings: List[str]):
+        if isinstance(strings, str) and os.path.isfile(strings):
+            with open(strings, encoding="utf-8") as f:
+                strings = [line.strip() for line in f]
+        strings = [self.normalizer(string) for string in strings]
+        bigrams = {bigram for string in strings for bigram in self._to_bigram(string)}
+        vocab = sorted(bigrams)
+        vocab_to_idx = {v: idx for idx, v in enumerate(vocab)}
+        self.vocab = vocab
+        self.vocab_to_idx = vocab_to_idx
+        self.unk_ids = len(vocab) + 1
+        self.vocab_size = len(vocab) + 1
+
+    def tokenize(self, string: str) -> List[str]:
+        return self._to_bigram(self.normalizer(string))
+
+    def detokenize(self, tokens: List[str]) -> str:
+        string = "".join(token[0] for token in tokens[:-1]) + tokens[-1]
+        return self.normalizer.denormalize(string)
 
     def encode(self, string: str) -> List[int]:
         return self.convert_tokens_to_ids(self.tokenize(string))
