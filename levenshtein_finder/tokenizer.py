@@ -173,7 +173,7 @@ class BigramTokenizer(Tokenizer):
 
     def _to_bigram(self, string):
         n = max(len(string), 2)
-        return [string[i : i + 2] for i in range(n - 1)]
+        return [string[i:i + 2] for i in range(n - 1)]
 
     def train(self, strings: List[str]):
         if isinstance(strings, str) and os.path.isfile(strings):
