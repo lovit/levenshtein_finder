@@ -1,3 +1,4 @@
+import os
 from typing import List, Union
 from unicodedata import normalize
 from .normalizer import Normalizers
@@ -65,6 +66,8 @@ class WordpieceTokenizersWrapper(Tokenizer):
         show_progress: bool = True,
         wordpieces_prefix: str = "##",
     ):
+        if not isinstance(files, str) or not os.path.isfile(files):
+            raise ValueError("`WordpieceTokenizersWrapper.train` input argument must be file path")
         self.tokenizer.train(
             files=files,
             vocab_size=vocab_size,
@@ -122,6 +125,9 @@ class CharacterTokenizer(Tokenizer):
         return len(self.vocab) > 0
 
     def train(self, strings: List[str]):
+        if isinstance(strings, str) and os.path.isfile(strings):
+            with open(strings, encoding="utf-8") as f:
+                strings = [line.strip() for line in f]
         charset = {char for string in strings for char in self.normalizer(string)}
         vocab = sorted(charset)
         vocab_to_idx = {v: idx for idx, v in enumerate(vocab)}
