@@ -37,7 +37,7 @@ char_tokenizer.train(["list", "of", "words"])
 When you use word piece tokenizer in Huggingface's [`tokenizers`](https://github.com/huggingface/tokenizers), wrap the class instance with `WordpieceTokenizersWrapper`
 
 In [2]
-```
+```python
 from tokenizers import BertWordPieceTokenizer
 from levenshtein_finder import WordpieceTokenizersWrapper
 
